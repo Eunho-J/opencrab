@@ -25,9 +25,9 @@ afterEach(async () => {
 });
 
 describe("legacy state dir auto-migration", () => {
-  it("follows legacy symlink when it points at another legacy dir (openclaw -> clawdbot)", async () => {
+  it("follows legacy symlink when it points at another legacy dir (moldbot -> clawdbot)", async () => {
     const root = await makeTempRoot();
-    const legacySymlink = path.join(root, ".openclaw");
+    const legacySymlink = path.join(root, ".moldbot");
     const legacyDir = path.join(root, ".clawdbot");
 
     fs.mkdirSync(legacyDir, { recursive: true });
@@ -47,6 +47,6 @@ describe("legacy state dir auto-migration", () => {
     const targetMarker = path.join(root, ".opencrab", "marker.txt");
     expect(fs.readFileSync(targetMarker, "utf-8")).toBe("ok");
     expect(fs.readFileSync(path.join(root, ".clawdbot", "marker.txt"), "utf-8")).toBe("ok");
-    expect(fs.readFileSync(path.join(root, ".openclaw", "marker.txt"), "utf-8")).toBe("ok");
+    expect(fs.readFileSync(path.join(root, ".moldbot", "marker.txt"), "utf-8")).toBe("ok");
   });
 });

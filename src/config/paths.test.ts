@@ -86,9 +86,8 @@ describe("state + config path candidates", () => {
     const resolvedHome = path.resolve(home);
     const candidates = resolveDefaultConfigCandidates({} as NodeJS.ProcessEnv, () => home);
     const expected: string[] = [];
-    for (const dir of [".opencrab", ".openclaw", ".clawdbot", ".moldbot", ".moltbot"]) {
+    for (const dir of [".opencrab", ".clawdbot", ".moldbot", ".moltbot"]) {
       expected.push(path.join(resolvedHome, dir, "opencrab.json"));
-      expected.push(path.join(resolvedHome, dir, "openclaw.json"));
       expected.push(path.join(resolvedHome, dir, "clawdbot.json"));
       expected.push(path.join(resolvedHome, dir, "moldbot.json"));
       expected.push(path.join(resolvedHome, dir, "moltbot.json"));
@@ -107,7 +106,7 @@ describe("state + config path candidates", () => {
 
   it("falls back to existing legacy state dir when ~/.opencrab is missing", async () => {
     await withTempRoot("opencrab-state-legacy-", async (root) => {
-      const legacyDir = path.join(root, ".openclaw");
+      const legacyDir = path.join(root, ".clawdbot");
       await fs.mkdir(legacyDir, { recursive: true });
       const resolved = resolveStateDir({} as NodeJS.ProcessEnv, () => root);
       expect(resolved).toBe(legacyDir);
@@ -116,9 +115,9 @@ describe("state + config path candidates", () => {
 
   it("CONFIG_PATH prefers existing config when present", async () => {
     await withTempRoot("opencrab-config-", async (root) => {
-      const legacyDir = path.join(root, ".openclaw");
+      const legacyDir = path.join(root, ".clawdbot");
       await fs.mkdir(legacyDir, { recursive: true });
-      const legacyPath = path.join(legacyDir, "openclaw.json");
+      const legacyPath = path.join(legacyDir, "clawdbot.json");
       await fs.writeFile(legacyPath, "{}", "utf-8");
 
       const resolved = resolveConfigPathCandidate({} as NodeJS.ProcessEnv, () => root);

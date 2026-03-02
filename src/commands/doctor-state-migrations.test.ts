@@ -89,7 +89,7 @@ const DIR_LINK_TYPE = process.platform === "win32" ? "junction" : "dir";
 function getStateDirMigrationPaths(root: string) {
   return {
     targetDir: path.join(root, ".opencrab"),
-    legacyDir: path.join(root, ".openclaw"),
+    legacyDir: path.join(root, ".clawdbot"),
   };
 }
 

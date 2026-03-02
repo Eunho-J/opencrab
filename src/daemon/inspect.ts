@@ -14,7 +14,7 @@ export type ExtraGatewayService = {
   label: string;
   detail: string;
   scope: "user" | "system";
-  marker?: "opencrab" | "openclaw" | "clawdbot" | "moltbot";
+  marker?: "opencrab" | "clawdbot" | "moltbot";
   legacy?: boolean;
 };
 
@@ -22,7 +22,7 @@ export type FindExtraGatewayServicesOptions = {
   deep?: boolean;
 };
 
-const EXTRA_MARKERS = ["opencrab", "openclaw", "clawdbot", "moltbot"] as const;
+const EXTRA_MARKERS = ["opencrab", "clawdbot", "moltbot"] as const;
 
 export function renderGatewayServiceCleanupHints(
   env: Record<string, string | undefined> = process.env as Record<string, string | undefined>,
@@ -71,8 +71,8 @@ function detectMarker(content: string): Marker | null {
 
 function hasGatewayServiceMarker(content: string): boolean {
   const lower = content.toLowerCase();
-  const markerKeys = ["opencrab_service_marker", "openclaw_service_marker"];
-  const kindKeys = ["opencrab_service_kind", "openclaw_service_kind"];
+  const markerKeys = ["opencrab_service_marker"];
+  const kindKeys = ["opencrab_service_kind"];
   const markerValues = [GATEWAY_SERVICE_MARKER.toLowerCase()];
   const hasMarkerKey = markerKeys.some((key) => lower.includes(key));
   const hasKindKey = kindKeys.some((key) => lower.includes(key));
@@ -133,12 +133,7 @@ function isIgnoredSystemdName(name: string): boolean {
 
 function isLegacyLabel(label: string): boolean {
   const lower = label.toLowerCase();
-  return (
-    lower.includes("legacy") ||
-    lower.includes("openclaw") ||
-    lower.includes("clawdbot") ||
-    lower.includes("moltbot")
-  );
+  return lower.includes("legacy") || lower.includes("clawdbot") || lower.includes("moltbot");
 }
 
 function lowerLabelIncludesOpenCrab(label: string): boolean {
@@ -217,7 +212,7 @@ async function scanLaunchdDir(params: {
         label,
         detail: `plist: ${fullPath}`,
         scope: params.scope,
-        marker: lowerLabelIncludesOpenCrab(label) ? "opencrab" : "openclaw",
+        marker: lowerLabelIncludesOpenCrab(label) ? "opencrab" : (detectMarker(label) ?? undefined),
         legacy: true,
       });
       continue;
