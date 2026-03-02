@@ -1,5 +1,5 @@
 import os from "node:os";
-import type { OpenClawConfig } from "../config/types.js";
+import type { OpenCrabConfig } from "../config/types.js";
 import { resolveGatewayBindUrl } from "../shared/gateway-bind-url.js";
 import { isCarrierGradeNatIpv4Address, isRfc1918Ipv4Address } from "../shared/net/ip.js";
 import { resolveTailnetHostWithRunner } from "../shared/tailscale-status.js";
@@ -89,8 +89,8 @@ function normalizeUrl(raw: string, schemeFallback: "ws" | "wss"): string | null 
   return `${schemeFallback}://${withoutPath}`;
 }
 
-function resolveGatewayPort(cfg: OpenClawConfig, env: NodeJS.ProcessEnv): number {
-  const envRaw = env.OPENCLAW_GATEWAY_PORT?.trim() || env.CLAWDBOT_GATEWAY_PORT?.trim();
+function resolveGatewayPort(cfg: OpenCrabConfig, env: NodeJS.ProcessEnv): number {
+  const envRaw = env.OPENCRAB_GATEWAY_PORT?.trim();
   if (envRaw) {
     const parsed = Number.parseInt(envRaw, 10);
     if (Number.isFinite(parsed) && parsed > 0) {
@@ -105,7 +105,7 @@ function resolveGatewayPort(cfg: OpenClawConfig, env: NodeJS.ProcessEnv): number
 }
 
 function resolveScheme(
-  cfg: OpenClawConfig,
+  cfg: OpenCrabConfig,
   opts?: {
     forceSecure?: boolean;
   },
@@ -163,16 +163,10 @@ function pickTailnetIPv4(
   return pickIPv4Matching(networkInterfaces, isTailnetIPv4);
 }
 
-function resolveAuth(cfg: OpenClawConfig, env: NodeJS.ProcessEnv): ResolveAuthResult {
+function resolveAuth(cfg: OpenCrabConfig, env: NodeJS.ProcessEnv): ResolveAuthResult {
   const mode = cfg.gateway?.auth?.mode;
-  const token =
-    env.OPENCLAW_GATEWAY_TOKEN?.trim() ||
-    env.CLAWDBOT_GATEWAY_TOKEN?.trim() ||
-    cfg.gateway?.auth?.token?.trim();
-  const password =
-    env.OPENCLAW_GATEWAY_PASSWORD?.trim() ||
-    env.CLAWDBOT_GATEWAY_PASSWORD?.trim() ||
-    cfg.gateway?.auth?.password?.trim();
+  const token = env.OPENCRAB_GATEWAY_TOKEN?.trim() || cfg.gateway?.auth?.token?.trim();
+  const password = env.OPENCRAB_GATEWAY_PASSWORD?.trim() || cfg.gateway?.auth?.password?.trim();
 
   if (mode === "password") {
     if (!password) {
@@ -196,7 +190,7 @@ function resolveAuth(cfg: OpenClawConfig, env: NodeJS.ProcessEnv): ResolveAuthRe
 }
 
 async function resolveGatewayUrl(
-  cfg: OpenClawConfig,
+  cfg: OpenCrabConfig,
   opts: {
     env: NodeJS.ProcessEnv;
     publicUrl?: string;
@@ -264,7 +258,7 @@ export function encodePairingSetupCode(payload: PairingSetupPayload): string {
 }
 
 export async function resolvePairingSetupFromConfig(
-  cfg: OpenClawConfig,
+  cfg: OpenCrabConfig,
   options: ResolvePairingSetupOptions = {},
 ): Promise<PairingSetupResolution> {
   const env = options.env ?? process.env;
