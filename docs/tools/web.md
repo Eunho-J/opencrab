@@ -1,10 +1,11 @@
 ---
-summary: "Web search + fetch tools (Brave Search API, Perplexity direct/OpenRouter, Gemini Google Search grounding)"
+summary: "Web search + fetch tools (Brave Search API, Perplexity/OpenRouter, Gemini grounding, Comet MCP)"
 read_when:
   - You want to enable web_search or web_fetch
   - You need Brave Search API key setup
   - You want to use Perplexity Sonar for web search
   - You want to use Gemini with Google Search grounding
+  - You want to use Comet MCP as the web_search backend
 title: "Web Tools"
 ---
 
@@ -12,7 +13,7 @@ title: "Web Tools"
 
 OpenClaw ships two lightweight web tools:
 
-- `web_search` — Search the web via Brave Search API (default), Perplexity Sonar, or Gemini with Google Search grounding.
+- `web_search` — Search the web via Brave Search API (default), Perplexity Sonar, Gemini with Google Search grounding, or Comet MCP.
 - `web_fetch` — HTTP fetch + readable extraction (HTML → markdown/text).
 
 These are **not** browser automation. For JS-heavy sites or logins, use the
@@ -24,6 +25,7 @@ These are **not** browser automation. For JS-heavy sites or logins, use the
   - **Brave** (default): returns structured results (title, URL, snippet).
   - **Perplexity**: returns AI-synthesized answers with citations from real-time web search.
   - **Gemini**: returns AI-synthesized answers grounded in Google Search with citations.
+  - **Comet MCP**: delegates browsing/search to Comet via MCP and returns normalized title/url/snippet results.
 - Results are cached by query for 15 minutes (configurable).
 - `web_fetch` does a plain HTTP GET and extracts readable content
   (HTML → markdown/text). It does **not** execute JavaScript.
@@ -31,11 +33,12 @@ These are **not** browser automation. For JS-heavy sites or logins, use the
 
 ## Choosing a search provider
 
-| Provider            | Pros                                         | Cons                                     | API Key                                      |
-| ------------------- | -------------------------------------------- | ---------------------------------------- | -------------------------------------------- |
-| **Brave** (default) | Fast, structured results, free tier          | Traditional search results               | `BRAVE_API_KEY`                              |
-| **Perplexity**      | AI-synthesized answers, citations, real-time | Requires Perplexity or OpenRouter access | `OPENROUTER_API_KEY` or `PERPLEXITY_API_KEY` |
-| **Gemini**          | Google Search grounding, AI-synthesized      | Requires Gemini API key                  | `GEMINI_API_KEY`                             |
+| Provider            | Pros                                          | Cons                                       | API Key / Setup                                |
+| ------------------- | --------------------------------------------- | ------------------------------------------ | ---------------------------------------------- |
+| **Brave** (default) | Fast, structured results, free tier           | Traditional search results                 | `BRAVE_API_KEY`                                |
+| **Perplexity**      | AI-synthesized answers, citations, real-time  | Requires Perplexity or OpenRouter access   | `OPENROUTER_API_KEY` or `PERPLEXITY_API_KEY`   |
+| **Gemini**          | Google Search grounding, AI-synthesized       | Requires Gemini API key                    | `GEMINI_API_KEY`                               |
+| **Comet MCP**       | Real browser delegation, dynamic-site support | Requires local Comet install + MCP runtime | `mcporter` + configured `comet-mcp` MCP server |
 
 See [Brave Search setup](/brave-search) and [Perplexity Sonar](/perplexity) for provider-specific details.
 
@@ -45,8 +48,11 @@ If no `provider` is explicitly set, OpenClaw auto-detects which provider to use 
 
 1. **Brave** — `BRAVE_API_KEY` env var or `search.apiKey` config
 2. **Gemini** — `GEMINI_API_KEY` env var or `search.gemini.apiKey` config
-3. **Perplexity** — `PERPLEXITY_API_KEY` / `OPENROUTER_API_KEY` env var or `search.perplexity.apiKey` config
-4. **Grok** — `XAI_API_KEY` env var or `search.grok.apiKey` config
+3. **Kimi** — `KIMI_API_KEY` / `MOONSHOT_API_KEY` env var or `search.kimi.apiKey` config
+4. **Perplexity** — `PERPLEXITY_API_KEY` / `OPENROUTER_API_KEY` env var or `search.perplexity.apiKey` config
+5. **Grok** — `XAI_API_KEY` env var or `search.grok.apiKey` config
+
+`comet_mcp` is not auto-detected. Set it explicitly in config.
 
 If no keys are found, it falls back to Brave (you'll get a missing-key error prompting you to configure one).
 
@@ -60,6 +66,30 @@ Set the provider in config:
     web: {
       search: {
         provider: "brave", // or "perplexity" or "gemini"
+      },
+    },
+  },
+}
+```
+
+Example: switch to Comet MCP (via mcporter):
+
+```json5
+{
+  tools: {
+    web: {
+      search: {
+        provider: "comet_mcp",
+        cometMcp: {
+          // MCP server name in mcporter (default: "comet-bridge")
+          serverName: "comet-bridge",
+          // optional: "search" | "research" | "labs" | "learn"
+          mode: "research",
+          // optional timeout passed to comet_ask
+          timeoutMs: 30000,
+          // optional: use Brave if comet_mcp fails
+          fallbackToBrave: true,
+        },
       },
     },
   },
@@ -198,6 +228,23 @@ For a gateway install, put it in `~/.openclaw/.env`.
 - The default model (`gemini-2.5-flash`) is fast and cost-effective.
   Any Gemini model that supports grounding can be used.
 
+## Using Comet MCP
+
+Comet MCP lets OpenClaw delegate browsing/research to Perplexity Comet through MCP.
+
+### Requirements
+
+1. Install [Perplexity Comet](https://www.perplexity.ai/comet)
+2. Install and configure [`comet-mcp`](https://github.com/hanzili/comet-mcp)
+3. Register that MCP server in `mcporter` (server name defaults to `comet-bridge`)
+4. Set `tools.web.search.provider: "comet_mcp"`
+
+### Notes
+
+- `comet_mcp` does not use API keys.
+- Optional fallback: set `tools.web.search.cometMcp.fallbackToBrave: true` and configure a Brave API key.
+- Results are normalized to `title`, `url`, and `snippet` for compatibility with existing `web_search` workflows.
+
 ## web_search
 
 Search the web using your configured provider.
@@ -208,6 +255,7 @@ Search the web using your configured provider.
 - API key for your chosen provider:
   - **Brave**: `BRAVE_API_KEY` or `tools.web.search.apiKey`
   - **Perplexity**: `OPENROUTER_API_KEY`, `PERPLEXITY_API_KEY`, or `tools.web.search.perplexity.apiKey`
+  - **Comet MCP**: configured `mcporter` + `comet-mcp` server (`tools.web.search.provider: "comet_mcp"`)
 
 ### Config
 

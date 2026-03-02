@@ -50,6 +50,26 @@ describe("web search provider config", () => {
 
     expect(res.ok).toBe(true);
   });
+
+  it("accepts comet_mcp provider and config", () => {
+    const res = validateConfigObject({
+      tools: {
+        web: {
+          search: {
+            provider: "comet_mcp",
+            cometMcp: {
+              serverName: "comet-bridge",
+              mode: "research",
+              timeoutMs: 25_000,
+              fallbackToBrave: true,
+            },
+          },
+        },
+      },
+    });
+
+    expect(res.ok).toBe(true);
+  });
 });
 
 describe("web search provider auto-detection", () => {
@@ -131,5 +151,18 @@ describe("web search provider auto-detection", () => {
         typeof resolveSearchProvider
       >[0]),
     ).toBe("gemini");
+  });
+
+  it("normalizes comet provider aliases", () => {
+    expect(
+      resolveSearchProvider({ provider: "comet_mcp" } as unknown as Parameters<
+        typeof resolveSearchProvider
+      >[0]),
+    ).toBe("comet_mcp");
+    expect(
+      resolveSearchProvider({ provider: "comet-mcp" } as unknown as Parameters<
+        typeof resolveSearchProvider
+      >[0]),
+    ).toBe("comet_mcp");
   });
 });
