@@ -444,13 +444,23 @@ export function buildAgentSystemPrompt(params: {
     "TOOLS.md does not control tool availability; it is user guidance for how to use external tools.",
     `For long waits, avoid rapid poll loops: use ${execToolName} with enough yieldMs or ${processToolName}(action=poll, timeout=<ms>).`,
     "If a task is more complex or takes longer, spawn a sub-agent. Completion is push-based: it will auto-announce when done.",
+    hasSessionsSpawn
+      ? "Delegation-first: keep this core session conversation-focused, and route execution work (code edits, repo operations, config changes, build/test/check commands) through `sessions_spawn` workers by default."
+      : "",
+    hasSessionsSpawn
+      ? 'Routing policy: simple tasks -> `runtime: "subagent"` (lightweight child session); complex or long-running tasks -> `runtime: "acp"`.'
+      : "",
     ...(hasSessionsSpawn && acpEnabled
       ? [
           'For requests like "do this in codex/claude code/gemini", treat it as ACP harness intent and call `sessions_spawn` with `runtime: "acp"`.',
           'On Discord, default ACP harness requests to thread-bound persistent sessions (`thread: true`, `mode: "session"`) unless the user asks otherwise.',
+          'Worker backend preference: `runtime: "omx"`, `"omc"`, or `"omo"` routes through ACP and defaults `agentId` to that backend label unless `agentId` is set explicitly.',
           "Set `agentId` explicitly unless `acp.defaultAgent` is configured, and do not route ACP harness requests through `subagents`/`agents_list` or local PTY exec flows.",
         ]
       : []),
+    hasSessionsSpawn
+      ? "Use direct execution/tool calls in this core session only when delegation is unavailable or the user explicitly asks for in-session execution."
+      : "",
     "Do not poll `subagents list` / `sessions_list` in a loop; only check status on-demand (for intervention, debugging, or when explicitly asked).",
     "",
     "## Tool Call Style",

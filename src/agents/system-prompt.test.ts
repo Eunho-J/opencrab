@@ -268,6 +268,24 @@ describe("buildAgentSystemPrompt", () => {
     );
   });
 
+  it("documents delegation-first worker routing and backend aliases", () => {
+    const prompt = buildAgentSystemPrompt({
+      workspaceDir: "/tmp/openclaw",
+      toolNames: ["sessions_spawn"],
+    });
+
+    expect(prompt).toContain("Delegation-first: keep this core session conversation-focused");
+    expect(prompt).toContain(
+      'Routing policy: simple tasks -> `runtime: "subagent"` (lightweight child session); complex or long-running tasks -> `runtime: "acp"`.',
+    );
+    expect(prompt).toContain(
+      'Worker backend preference: `runtime: "omx"`, `"omc"`, or `"omo"` routes through ACP',
+    );
+    expect(prompt).toContain(
+      "Use direct execution/tool calls in this core session only when delegation is unavailable",
+    );
+  });
+
   it("omits ACP harness guidance when ACP is disabled", () => {
     const prompt = buildAgentSystemPrompt({
       workspaceDir: "/tmp/openclaw",
@@ -279,6 +297,9 @@ describe("buildAgentSystemPrompt", () => {
       'For requests like "do this in codex/claude code/gemini", treat it as ACP harness intent',
     );
     expect(prompt).not.toContain('runtime="acp" requires `agentId`');
+    expect(prompt).not.toContain(
+      'Worker backend preference: `runtime: "omx"`, `"omc"`, or `"omo"`',
+    );
     expect(prompt).not.toContain("not ACP harness ids");
     expect(prompt).toContain("- sessions_spawn: Spawn an isolated sub-agent session");
     expect(prompt).toContain("- agents_list: List OpenClaw agent ids allowed for sessions_spawn");
