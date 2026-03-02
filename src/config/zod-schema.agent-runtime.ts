@@ -264,6 +264,7 @@ export const ToolsWebSearchSchema = z
         z.literal("grok"),
         z.literal("gemini"),
         z.literal("kimi"),
+        z.literal("comet_mcp"),
       ])
       .optional(),
     apiKey: z.string().optional().register(sensitive),
@@ -298,6 +299,22 @@ export const ToolsWebSearchSchema = z
         apiKey: z.string().optional().register(sensitive),
         baseUrl: z.string().optional(),
         model: z.string().optional(),
+      })
+      .strict()
+      .optional(),
+    cometMcp: z
+      .object({
+        serverName: z.string().optional(),
+        mode: z
+          .union([
+            z.literal("search"),
+            z.literal("research"),
+            z.literal("labs"),
+            z.literal("learn"),
+          ])
+          .optional(),
+        timeoutMs: z.number().int().positive().optional(),
+        fallbackToBrave: z.boolean().optional(),
       })
       .strict()
       .optional(),

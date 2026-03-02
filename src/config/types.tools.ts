@@ -430,8 +430,8 @@ export type ToolsConfig = {
     search?: {
       /** Enable web search tool (default: true when API key is present). */
       enabled?: boolean;
-      /** Search provider ("brave", "perplexity", "grok", "gemini", or "kimi"). */
-      provider?: "brave" | "perplexity" | "grok" | "gemini" | "kimi";
+      /** Search provider ("brave", "perplexity", "grok", "gemini", "kimi", or "comet_mcp"). */
+      provider?: "brave" | "perplexity" | "grok" | "gemini" | "kimi" | "comet_mcp";
       /** Brave Search API key (optional; defaults to BRAVE_API_KEY env var). */
       apiKey?: string;
       /** Default search results count (1-10). */
@@ -473,6 +473,17 @@ export type ToolsConfig = {
         baseUrl?: string;
         /** Model to use (defaults to "moonshot-v1-128k"). */
         model?: string;
+      };
+      /** Comet MCP configuration (used when provider="comet_mcp"). */
+      cometMcp?: {
+        /** MCP server name as registered in mcporter (default: "comet-bridge"). */
+        serverName?: string;
+        /** Optional Comet mode before running the query ("search", "research", "labs", "learn"). */
+        mode?: "search" | "research" | "labs" | "learn";
+        /** Timeout for comet_ask in milliseconds (defaults to timeoutSeconds * 1000). */
+        timeoutMs?: number;
+        /** Fall back to Brave Search if comet_mcp call fails (default: false). */
+        fallbackToBrave?: boolean;
       };
     };
     fetch?: {
