@@ -46,6 +46,14 @@ RUN if [ -n "$OPENCLAW_INSTALL_BROWSER" ]; then \
 
 USER node
 COPY --chown=node:node . .
+# Extension tests import runtime deps directly from each extension package.
+# Install those deps in-place because the initial workspace install only seeds
+# root/ui manifests for better Docker layer caching.
+RUN npm install --prefix extensions/diffs --omit=dev --package-lock=false \
+ && npm install --prefix extensions/nostr --omit=dev --package-lock=false \
+ && npm install --prefix extensions/twitch --omit=dev --package-lock=false \
+ && npm install --prefix extensions/matrix --omit=dev --package-lock=false \
+ && npm install --prefix extensions/memory-lancedb --omit=dev --package-lock=false
 RUN pnpm build
 # Force pnpm for UI build (Bun may fail on ARM/Synology architectures)
 ENV OPENCLAW_PREFER_PNPM=1
