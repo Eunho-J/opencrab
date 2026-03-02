@@ -58,3 +58,14 @@ vendor/
 !vendor/a2ui/renderers/
 !vendor/a2ui/renderers/lit/
 !vendor/a2ui/renderers/lit/**
+# Keep Chrome extension runtime assets available for Docker-based tests.
+!assets/chrome-extension/
+!assets/chrome-extension/*.js
+!assets/chrome-extension/*.json
+!assets/chrome-extension/*.html
+!assets/chrome-extension/README.md
+!assets/chrome-extension/icons/
+!assets/chrome-extension/icons/icon16.png
+!assets/chrome-extension/icons/icon32.png
+!assets/chrome-extension/icons/icon48.png
+!assets/chrome-extension/icons/icon128.png
