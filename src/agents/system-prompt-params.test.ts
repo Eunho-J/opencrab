@@ -13,9 +13,15 @@ async function makeRepoRoot(root: string): Promise<void> {
   await fs.mkdir(path.join(root, ".git"), { recursive: true });
 }
 
-function buildParams(params: { config?: OpenClawConfig; workspaceDir?: string; cwd?: string }) {
+function buildParams(params: {
+  config?: OpenClawConfig;
+  workspaceDir?: string;
+  cwd?: string;
+  agentId?: string;
+}) {
   return buildSystemPromptParams({
     config: params.config,
+    agentId: params.agentId,
     workspaceDir: params.workspaceDir,
     cwd: params.cwd,
     runtime: {
@@ -100,5 +106,40 @@ describe("buildSystemPromptParams repo root", () => {
     const { runtimeInfo } = buildParams({ workspaceDir });
 
     expect(runtimeInfo.repoRoot).toBeUndefined();
+  });
+});
+
+describe("buildSystemPromptParams persona profile", () => {
+  it("uses defaults persona profile when no per-agent override exists", () => {
+    const config: OpenClawConfig = {
+      agents: {
+        defaults: {
+          personaProfile: "mrw-anime-experimental",
+        },
+        list: [{ id: "main" }],
+      },
+    };
+
+    const result = buildParams({ config, agentId: "main" });
+    expect(result.personaProfile).toBe("mrw-anime-experimental");
+  });
+
+  it("prefers agent persona profile over defaults", () => {
+    const config: OpenClawConfig = {
+      agents: {
+        defaults: {
+          personaProfile: "mrw-anime-experimental",
+        },
+        list: [
+          { id: "main", personaProfile: " " },
+          { id: "otaku-lab", personaProfile: "mrw-anime-experimental-v2" },
+        ],
+      },
+    };
+
+    expect(buildParams({ config, agentId: "main" }).personaProfile).toBe("mrw-anime-experimental");
+    expect(buildParams({ config, agentId: "otaku-lab" }).personaProfile).toBe(
+      "mrw-anime-experimental-v2",
+    );
   });
 });

@@ -347,6 +347,31 @@ describe("buildAgentSystemPrompt", () => {
     expect(prompt).toContain("Reminder: commit your changes in this workspace after edits.");
   });
 
+  it("injects generic persona profile guidance when a custom profile id is configured", () => {
+    const prompt = buildAgentSystemPrompt({
+      workspaceDir: "/tmp/openclaw",
+      personaProfile: "my-custom-profile",
+    });
+
+    expect(prompt).toContain("## Persona Profile");
+    expect(prompt).toContain("Active persona profile: my-custom-profile");
+    expect(prompt).toContain(
+      "Honor this profile while still following higher-priority safety and policy rules.",
+    );
+  });
+
+  it("injects mrw-anime experimental persona guidance when enabled", () => {
+    const prompt = buildAgentSystemPrompt({
+      workspaceDir: "/tmp/openclaw",
+      personaProfile: "mrw-anime-experimental",
+    });
+
+    expect(prompt).toContain("## Persona Profile (Experimental)");
+    expect(prompt).toContain("Mr.W + Cowboy Bebop");
+    expect(prompt).toContain("Pacing: brief opener");
+    expect(prompt).toContain("Copyright: never quote");
+  });
+
   it("shows timezone section for 12h, 24h, and timezone-only modes", () => {
     const cases = [
       {

@@ -11,6 +11,8 @@ export type AgentConfig = {
   name?: string;
   workspace?: string;
   agentDir?: string;
+  /** Optional persona profile id (overrides agents.defaults.personaProfile for this agent). */
+  personaProfile?: string;
   model?: AgentModelConfig;
   /** Optional allowlist of skills for this agent (omit = all skills; empty = none). */
   skills?: string[];
