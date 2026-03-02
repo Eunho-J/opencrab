@@ -6,7 +6,23 @@ import { SUBAGENT_SPAWN_MODES, spawnSubagentDirect } from "../subagent-spawn.js"
 import type { AnyAgentTool } from "./common.js";
 import { jsonResult, readStringParam } from "./common.js";
 
-const SESSIONS_SPAWN_RUNTIMES = ["subagent", "acp"] as const;
+const ACP_WORKER_RUNTIME_ALIASES = ["omx", "omc", "omo"] as const;
+const ACP_WORKER_RUNTIME_ALIAS_SET = new Set<string>(ACP_WORKER_RUNTIME_ALIASES);
+const SESSIONS_SPAWN_RUNTIMES = ["subagent", "acp", ...ACP_WORKER_RUNTIME_ALIASES] as const;
+
+function resolveSessionsSpawnRuntime(runtime: unknown): {
+  runtime: "subagent" | "acp";
+  implicitAgentId?: string;
+} {
+  const normalized = typeof runtime === "string" ? runtime.trim().toLowerCase() : "";
+  if (normalized === "acp") {
+    return { runtime: "acp" };
+  }
+  if (ACP_WORKER_RUNTIME_ALIAS_SET.has(normalized)) {
+    return { runtime: "acp", implicitAgentId: normalized };
+  }
+  return { runtime: "subagent" };
+}
 
 const SessionsSpawnToolSchema = Type.Object({
   task: Type.String(),
@@ -41,14 +57,16 @@ export function createSessionsSpawnTool(opts?: {
     label: "Sessions",
     name: "sessions_spawn",
     description:
-      'Spawn an isolated session (runtime="subagent" or runtime="acp"). mode="run" is one-shot and mode="session" is persistent/thread-bound.',
+      'Spawn an isolated session (runtime="subagent", "acp", "omx", "omc", or "omo"). mode="run" is one-shot and mode="session" is persistent/thread-bound.',
     parameters: SessionsSpawnToolSchema,
     execute: async (_toolCallId, args) => {
       const params = args as Record<string, unknown>;
       const task = readStringParam(params, "task", { required: true });
       const label = typeof params.label === "string" ? params.label.trim() : "";
-      const runtime = params.runtime === "acp" ? "acp" : "subagent";
-      const requestedAgentId = readStringParam(params, "agentId");
+      const runtimeSelection = resolveSessionsSpawnRuntime(params.runtime);
+      const runtime = runtimeSelection.runtime;
+      const requestedAgentId =
+        readStringParam(params, "agentId") ?? runtimeSelection.implicitAgentId;
       const modelOverride = readStringParam(params, "model");
       const thinkingOverrideRaw = readStringParam(params, "thinking");
       const cwd = readStringParam(params, "cwd");
