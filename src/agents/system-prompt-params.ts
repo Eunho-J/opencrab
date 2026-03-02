@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { OpenClawConfig } from "../config/config.js";
 import { findGitRoot } from "../infra/git-root.js";
+import { resolveAgentConfig } from "./agent-scope.js";
 import {
   formatUserTime,
   resolveUserTimeFormat,
@@ -30,6 +31,7 @@ export type SystemPromptRuntimeParams = {
   userTimezone: string;
   userTime?: string;
   userTimeFormat?: ResolvedTimeFormat;
+  personaProfile?: string;
 };
 
 export function buildSystemPromptParams(params: {
@@ -47,6 +49,10 @@ export function buildSystemPromptParams(params: {
   const userTimezone = resolveUserTimezone(params.config?.agents?.defaults?.userTimezone);
   const userTimeFormat = resolveUserTimeFormat(params.config?.agents?.defaults?.timeFormat);
   const userTime = formatUserTime(new Date(), userTimezone, userTimeFormat);
+  const personaProfile = resolvePersonaProfile({
+    config: params.config,
+    agentId: params.agentId,
+  });
   return {
     runtimeInfo: {
       agentId: params.agentId,
@@ -56,7 +62,26 @@ export function buildSystemPromptParams(params: {
     userTimezone,
     userTime,
     userTimeFormat,
+    personaProfile,
   };
+}
+
+function resolvePersonaProfile(params: {
+  config?: OpenClawConfig;
+  agentId?: string;
+}): string | undefined {
+  const config = params.config;
+  if (!config) {
+    return undefined;
+  }
+  const agentOverride = params.agentId
+    ? resolveAgentConfig(config, params.agentId)?.personaProfile?.trim()
+    : undefined;
+  if (agentOverride) {
+    return agentOverride;
+  }
+  const defaultsValue = config.agents?.defaults?.personaProfile?.trim();
+  return defaultsValue || undefined;
 }
 
 function resolveRepoRoot(params: {

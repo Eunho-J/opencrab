@@ -136,6 +136,11 @@ export type AgentDefaultsConfig = {
   bootstrapTotalMaxChars?: number;
   /** Optional IANA timezone for the user (used in system prompt; defaults to host timezone). */
   userTimezone?: string;
+  /**
+   * Optional persona profile id used to inject an additional runtime persona block
+   * into the system prompt.
+   */
+  personaProfile?: string;
   /** Time format in system prompt: auto (OS preference), 12-hour, or 24-hour. */
   timeFormat?: "auto" | "12" | "24";
   /**

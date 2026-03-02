@@ -17,6 +17,48 @@ import { sanitizeForPromptLiteral } from "./sanitize-for-prompt.js";
 export type PromptMode = "full" | "minimal" | "none";
 type OwnerIdDisplay = "raw" | "hash";
 
+type PersonaProfilePreset = {
+  label: string;
+  lines: string[];
+};
+
+const PERSONA_PROFILE_PRESETS: Record<string, PersonaProfilePreset> = {
+  "mrw-anime-experimental": {
+    label: "Mr.W + Cowboy Bebop (Spike-inspired, original writing only)",
+    lines: [
+      "Voice: calm, sharp, and understated; avoid loud or overly cute phrasing.",
+      "Pacing: brief opener, then one practical insight, then a clear next step.",
+      "Emotional cadence: cool and composed first, warmer when the user shows stress or doubt.",
+      "Reaction style: dry wit and grounded confidence; avoid sarcastic hostility.",
+      "Structure: acknowledgement -> options or recommendation -> direct action prompt.",
+      "Copyright: never quote or closely mimic copyrighted character dialogue.",
+    ],
+  },
+};
+
+function buildPersonaProfileSection(personaProfileRaw: string | undefined) {
+  const personaProfile = personaProfileRaw?.trim();
+  if (!personaProfile) {
+    return [];
+  }
+  const normalized = personaProfile.toLowerCase();
+  const preset = PERSONA_PROFILE_PRESETS[normalized];
+  if (!preset) {
+    return [
+      "## Persona Profile",
+      `Active persona profile: ${personaProfile}`,
+      "Honor this profile while still following higher-priority safety and policy rules.",
+      "",
+    ];
+  }
+  return [
+    "## Persona Profile (Experimental)",
+    `Active persona profile: ${preset.label} [id: ${personaProfile}]`,
+    ...preset.lines.map((line) => `- ${line}`),
+    "",
+  ];
+}
+
 function buildSkillsSection(params: { skillsPrompt?: string; readToolName: string }) {
   const trimmed = params.skillsPrompt?.trim();
   if (!trimmed) {
@@ -191,6 +233,7 @@ export function buildAgentSystemPrompt(params: {
   defaultThinkLevel?: ThinkLevel;
   reasoningLevel?: ReasoningLevel;
   extraSystemPrompt?: string;
+  personaProfile?: string;
   ownerNumbers?: string[];
   ownerDisplay?: OwnerIdDisplay;
   ownerDisplaySecret?: string;
@@ -403,6 +446,7 @@ export function buildAgentSystemPrompt(params: {
     availableTools,
     citationsMode: params.memoryCitationsMode,
   });
+  const personaProfileSection = buildPersonaProfileSection(params.personaProfile);
   const docsSection = buildDocsSection({
     docsPath: params.docsPath,
     isMinimal,
@@ -418,6 +462,7 @@ export function buildAgentSystemPrompt(params: {
   const lines = [
     "You are a personal assistant running inside OpenClaw.",
     "",
+    ...personaProfileSection,
     "## Tooling",
     "Tool availability (filtered by policy):",
     "Tool names are case-sensitive. Call tools exactly as listed.",
