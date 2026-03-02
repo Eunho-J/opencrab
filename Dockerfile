@@ -53,8 +53,8 @@ RUN pnpm ui:build
 
 # Expose the CLI binary without requiring npm global writes as non-root.
 USER root
-RUN ln -sf /app/openclaw.mjs /usr/local/bin/openclaw \
- && chmod 755 /app/openclaw.mjs
+RUN ln -sf /app/opencrab.mjs /usr/local/bin/opencrab \
+ && chmod 755 /app/opencrab.mjs
 
 ENV NODE_ENV=production
 
@@ -68,5 +68,5 @@ USER node
 #
 # For container platforms requiring external health checks:
 #   1. Set OPENCLAW_GATEWAY_TOKEN or OPENCLAW_GATEWAY_PASSWORD env var
-#   2. Override CMD: ["node","openclaw.mjs","gateway","--allow-unconfigured","--bind","lan"]
-CMD ["node", "openclaw.mjs", "gateway", "--allow-unconfigured"]
+#   2. Override CMD: ["node","opencrab.mjs","gateway","--allow-unconfigured","--bind","lan"]
+CMD ["node", "opencrab.mjs", "gateway", "--allow-unconfigured"]

@@ -52,13 +52,11 @@ Model note: while any model is supported, I strongly recommend **Anthropic Pro/M
 Runtime: **Node ≥22**.
 
 ```bash
-npm install -g openclaw@latest
-# or: pnpm add -g openclaw@latest
+npm install -g opencrab@latest
+# or: pnpm add -g opencrab@latest
 
 opencrab onboard --install-daemon
 ```
-
-`opencrab` is now the primary CLI command. `openclaw` remains as a backward-compatible alias.
 
 The wizard installs the Gateway daemon (launchd/systemd user service) so it stays running.
 
@@ -109,7 +107,7 @@ pnpm opencrab onboard --install-daemon
 pnpm gateway:watch
 ```
 
-Note: `pnpm opencrab ...` runs TypeScript directly (via `tsx`). `pnpm build` produces `dist/` for running via Node / the packaged `opencrab` binary (`openclaw` alias retained).
+Note: `pnpm opencrab ...` runs TypeScript directly (via `tsx`). `pnpm build` produces `dist/` for running via Node / the packaged `opencrab` binary.
 
 ## Security defaults (DM access)
 
@@ -341,7 +339,7 @@ Details: [Security guide](https://docs.openclaw.ai/gateway/security) · [Docker 
 
 ### [WhatsApp](https://docs.openclaw.ai/channels/whatsapp)
 
-- Link the device: `pnpm openclaw channels login` (stores creds in `~/.openclaw/credentials`).
+- Link the device: `pnpm opencrab channels login` (stores creds in `~/.openclaw/credentials`).
 - Allowlist who can talk to the assistant via `channels.whatsapp.allowFrom`.
 - If `channels.whatsapp.groups` is set, it becomes a group allowlist; include `"*"` to allow all.
 
