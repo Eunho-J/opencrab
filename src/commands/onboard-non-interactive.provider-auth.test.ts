@@ -76,23 +76,23 @@ async function withOnboardEnv(
   run: (ctx: OnboardEnv) => Promise<void>,
 ): Promise<void> {
   const tempHome = await makeTempWorkspace(prefix);
-  const configPath = path.join(tempHome, "openclaw.json");
+  const configPath = path.join(tempHome, "opencrab.json");
   const runtime = createThrowingRuntime();
 
   try {
     await withEnvAsync(
       {
         HOME: tempHome,
-        OPENCLAW_STATE_DIR: tempHome,
-        OPENCLAW_CONFIG_PATH: configPath,
-        OPENCLAW_SKIP_CHANNELS: "1",
-        OPENCLAW_SKIP_GMAIL_WATCHER: "1",
-        OPENCLAW_SKIP_CRON: "1",
-        OPENCLAW_SKIP_CANVAS_HOST: "1",
-        OPENCLAW_GATEWAY_TOKEN: undefined,
-        OPENCLAW_GATEWAY_PASSWORD: undefined,
+        OPENCRAB_STATE_DIR: tempHome,
+        OPENCRAB_CONFIG_PATH: configPath,
+        OPENCRAB_SKIP_CHANNELS: "1",
+        OPENCRAB_SKIP_GMAIL_WATCHER: "1",
+        OPENCRAB_SKIP_CRON: "1",
+        OPENCRAB_SKIP_CANVAS_HOST: "1",
+        OPENCRAB_GATEWAY_TOKEN: undefined,
+        OPENCRAB_GATEWAY_PASSWORD: undefined,
         CUSTOM_API_KEY: undefined,
-        OPENCLAW_DISABLE_CONFIG_CACHE: "1",
+        OPENCRAB_DISABLE_CONFIG_CACHE: "1",
       },
       async () => {
         await run({ configPath, runtime });
