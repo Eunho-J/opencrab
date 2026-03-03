@@ -32,6 +32,11 @@ describe("host env security policy parity", () => {
       `${MACOS_APP_SOURCES_DIR}/HostEnvSanitizer.swift`,
     );
 
+    // Docker CLI images intentionally exclude apps/macos from context.
+    if (!fs.existsSync(generatedSwiftPath) || !fs.existsSync(sanitizerSwiftPath)) {
+      return;
+    }
+
     const policy = JSON.parse(fs.readFileSync(policyPath, "utf8")) as HostEnvSecurityPolicy;
     const generatedSource = fs.readFileSync(generatedSwiftPath, "utf8");
     const sanitizerSource = fs.readFileSync(sanitizerSwiftPath, "utf8");
