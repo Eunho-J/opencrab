@@ -19,7 +19,15 @@ import {
 import { GatewayClient } from "./client.js";
 import { buildDeviceAuthPayloadV3 } from "./device-auth.js";
 import { PROTOCOL_VERSION } from "./protocol/index.js";
-import { startGatewayServer } from "./server.js";
+
+// Load gateway server lazily so test suites can install temp HOME/env hooks
+// before server module paths/config constants are evaluated.
+let serverModulePromise: Promise<typeof import("./server.js")> | undefined;
+
+async function getServerModule() {
+  serverModulePromise ??= import("./server.js");
+  return await serverModulePromise;
+}
 
 export async function getFreeGatewayPort(): Promise<number> {
   return await getDeterministicFreePortBlock({ offsets: [0, 1, 2, 3, 4] });
@@ -231,6 +239,7 @@ export async function startGatewayWithClient(params: {
   process.env.OPENCLAW_CONFIG_PATH = params.configPath;
 
   const port = await getFreeGatewayPort();
+  const { startGatewayServer } = await getServerModule();
   const server = await startGatewayServer(port, {
     bind: "loopback",
     auth: { mode: "token", token: params.token },

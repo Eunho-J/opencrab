@@ -51,10 +51,10 @@ export function parseTimeoutMsOrExit(timeout?: string): number | undefined | nul
   return timeoutMs;
 }
 
-const OPENCLAW_REPO_URL = "https://github.com/openclaw/openclaw.git";
+const OPENCLAW_REPO_URL = "https://github.com/Eunho-J/opencrab.git";
 const MAX_LOG_CHARS = 8000;
 
-export const DEFAULT_PACKAGE_NAME = "openclaw";
+export const DEFAULT_PACKAGE_NAME = "opencrab";
 const CORE_PACKAGE_NAMES = new Set([DEFAULT_PACKAGE_NAME]);
 
 export function normalizeTag(value?: string | null): string | null {
@@ -64,6 +64,9 @@ export function normalizeTag(value?: string | null): string | null {
   const trimmed = value.trim();
   if (!trimmed) {
     return null;
+  }
+  if (trimmed.startsWith("opencrab@")) {
+    return trimmed.slice("opencrab@".length);
   }
   if (trimmed.startsWith("openclaw@")) {
     return trimmed.slice("openclaw@".length);
@@ -213,7 +216,7 @@ export async function ensureGitCheckout(params: {
     const empty = await isEmptyDir(params.dir);
     if (!empty) {
       throw new Error(
-        `OPENCLAW_GIT_DIR points at a non-git directory: ${params.dir}. Set OPENCLAW_GIT_DIR to an empty folder or an openclaw checkout.`,
+        `OPENCLAW_GIT_DIR points at a non-git directory: ${params.dir}. Set OPENCLAW_GIT_DIR to an empty folder or an opencrab checkout.`,
       );
     }
 
@@ -256,7 +259,7 @@ export async function resolveGlobalManager(params: {
 }
 
 export async function tryWriteCompletionCache(root: string, jsonMode: boolean): Promise<void> {
-  const binPath = path.join(root, "openclaw.mjs");
+  const binPath = path.join(root, "opencrab.mjs");
   if (!(await pathExists(binPath))) {
     return;
   }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { resolveGatewayProbeAuth as resolveStatusGatewayProbeAuth } from "../commands/status.gateway-probe.js";
-import type { OpenClawConfig } from "../config/config.js";
+import type { OpenCrabConfig } from "../config/config.js";
 import { resolveGatewayAuth } from "./auth.js";
 import { resolveGatewayCredentialsFromConfig } from "./credentials.js";
 import { resolveGatewayProbeAuth } from "./probe-auth.js";
@@ -14,17 +14,17 @@ type ExpectedCredentialSet = {
 
 type TestCase = {
   name: string;
-  cfg: OpenClawConfig;
+  cfg: OpenCrabConfig;
   env: NodeJS.ProcessEnv;
   expected: ExpectedCredentialSet;
 };
 
 const gatewayEnv = {
-  OPENCLAW_GATEWAY_TOKEN: "env-token",
-  OPENCLAW_GATEWAY_PASSWORD: "env-password",
+  OPENCRAB_GATEWAY_TOKEN: "env-token",
+  OPENCRAB_GATEWAY_PASSWORD: "env-password",
 } as NodeJS.ProcessEnv;
 
-function makeRemoteGatewayConfig(remote: { token?: string; password?: string }): OpenClawConfig {
+function makeRemoteGatewayConfig(remote: { token?: string; password?: string }): OpenCrabConfig {
   return {
     gateway: {
       mode: "remote",
@@ -34,15 +34,15 @@ function makeRemoteGatewayConfig(remote: { token?: string; password?: string }):
         password: "local-password",
       },
     },
-  } as OpenClawConfig;
+  } as OpenCrabConfig;
 }
 
 function withGatewayAuthEnv<T>(env: NodeJS.ProcessEnv, fn: () => T): T {
   const keys = [
+    "OPENCRAB_GATEWAY_TOKEN",
+    "OPENCRAB_GATEWAY_PASSWORD",
     "OPENCLAW_GATEWAY_TOKEN",
     "OPENCLAW_GATEWAY_PASSWORD",
-    "CLAWDBOT_GATEWAY_TOKEN",
-    "CLAWDBOT_GATEWAY_PASSWORD",
   ] as const;
   const previous = new Map<string, string | undefined>();
   for (const key of keys) {
@@ -80,10 +80,10 @@ describe("gateway credential precedence parity", () => {
             password: "config-password",
           },
         },
-      } as OpenClawConfig,
+      } as OpenCrabConfig,
       env: {
-        OPENCLAW_GATEWAY_TOKEN: "env-token",
-        OPENCLAW_GATEWAY_PASSWORD: "env-password",
+        OPENCRAB_GATEWAY_TOKEN: "env-token",
+        OPENCRAB_GATEWAY_PASSWORD: "env-password",
       } as NodeJS.ProcessEnv,
       expected: {
         call: { token: "env-token", password: "env-password" },
@@ -120,19 +120,19 @@ describe("gateway credential precedence parity", () => {
       },
     },
     {
-      name: "legacy env vars are ignored by probe/status/auth but still supported for call path",
+      name: "legacy env vars are ignored by call/probe/status/auth",
       cfg: {
         gateway: {
           mode: "local",
           auth: {},
         },
-      } as OpenClawConfig,
+      } as OpenCrabConfig,
       env: {
-        CLAWDBOT_GATEWAY_TOKEN: "legacy-token",
-        CLAWDBOT_GATEWAY_PASSWORD: "legacy-password",
+        OPENCLAW_GATEWAY_TOKEN: "legacy-token",
+        OPENCLAW_GATEWAY_PASSWORD: "legacy-password",
       } as NodeJS.ProcessEnv,
       expected: {
-        call: { token: "legacy-token", password: "legacy-password" },
+        call: { token: undefined, password: undefined },
         probe: { token: undefined, password: undefined },
         status: { token: undefined, password: undefined },
         auth: { token: undefined, password: undefined },

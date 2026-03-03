@@ -114,6 +114,9 @@ export type OpenClawConfig = {
   memory?: MemoryConfig;
 };
 
+// Backward-compatible alias during the OpenCrab -> OpenClaw rename migration.
+export type OpenCrabConfig = OpenClawConfig;
+
 export type ConfigValidationIssue = {
   path: string;
   message: string;

@@ -34,7 +34,7 @@ title: "OpenClaw"
     Install OpenClaw and bring up the Gateway in minutes.
   </Card>
   <Card title="Run the Wizard" href="/start/wizard" icon="sparkles">
-    Guided setup with `openclaw onboard` and pairing flows.
+    Guided setup with `opencrab onboard` and pairing flows.
   </Card>
   <Card title="Open the Control UI" href="/web/control-ui" icon="layout-dashboard">
     Launch the browser dashboard for chat, config, and sessions.
@@ -98,18 +98,18 @@ The Gateway is the single source of truth for sessions, routing, and channel con
 <Steps>
   <Step title="Install OpenClaw">
     ```bash
-    npm install -g openclaw@latest
+    npm install -g opencrab@latest
     ```
   </Step>
   <Step title="Onboard and install the service">
     ```bash
-    openclaw onboard --install-daemon
+    opencrab onboard --install-daemon
     ```
   </Step>
   <Step title="Pair WhatsApp and start the Gateway">
     ```bash
-    openclaw channels login
-    openclaw gateway --port 18789
+    opencrab channels login
+    opencrab gateway --port 18789
     ```
   </Step>
 </Steps>

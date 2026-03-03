@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { MACOS_APP_SOURCES_DIR } from "../compat/legacy-names.js";
 
 type HostEnvSecurityPolicy = {
   blockedKeys: string[];
@@ -24,12 +25,17 @@ describe("host env security policy parity", () => {
     const policyPath = path.join(repoRoot, "src/infra/host-env-security-policy.json");
     const generatedSwiftPath = path.join(
       repoRoot,
-      "apps/macos/Sources/OpenClaw/HostEnvSecurityPolicy.generated.swift",
+      `${MACOS_APP_SOURCES_DIR}/HostEnvSecurityPolicy.generated.swift`,
     );
     const sanitizerSwiftPath = path.join(
       repoRoot,
-      "apps/macos/Sources/OpenClaw/HostEnvSanitizer.swift",
+      `${MACOS_APP_SOURCES_DIR}/HostEnvSanitizer.swift`,
     );
+
+    // Docker CLI images intentionally exclude apps/macos from context.
+    if (!fs.existsSync(generatedSwiftPath) || !fs.existsSync(sanitizerSwiftPath)) {
+      return;
+    }
 
     const policy = JSON.parse(fs.readFileSync(policyPath, "utf8")) as HostEnvSecurityPolicy;
     const generatedSource = fs.readFileSync(generatedSwiftPath, "utf8");
