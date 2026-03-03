@@ -1,3 +1,5 @@
+import { loadConfig } from "../config/config.js";
+import type { GatewayServiceManagerMode } from "../config/types.gateway.js";
 import {
   installLaunchAgent,
   isLaunchAgentLoaded,
@@ -16,6 +18,10 @@ import {
   stopScheduledTask,
   uninstallScheduledTask,
 } from "./schtasks.js";
+import {
+  renderGatewayServiceManagerModeHints,
+  resolveLinuxGatewayServiceManagerMode,
+} from "./service-manager-mode.js";
 import type { GatewayServiceRuntime } from "./service-runtime.js";
 import type {
   GatewayServiceCommandConfig,
@@ -51,6 +57,48 @@ function ignoreInstallResult(
   };
 }
 
+function resolveLinuxServiceManagerModeCached(): GatewayServiceManagerMode {
+  try {
+    return resolveLinuxGatewayServiceManagerMode(loadConfig(), process.env);
+  } catch {
+    return resolveLinuxGatewayServiceManagerMode(undefined, process.env);
+  }
+}
+
+function createExternallyManagedService(mode: GatewayServiceManagerMode): GatewayService {
+  const hints = renderGatewayServiceManagerModeHints(mode, process.env);
+  const detail =
+    hints[0] ??
+    `Gateway service manager mode is "${mode}". Use ${process.platform} process supervision.`;
+  const unsupported = (action: string) =>
+    new Error(`${action} is unavailable when gateway.serviceManagerMode=${mode}. ${detail}`.trim());
+  const label = mode === "supervisor" ? "supervisor" : "service manager";
+  return {
+    label,
+    loadedText: "managed",
+    notLoadedText: "not managed by OpenClaw",
+    install: async () => {
+      throw unsupported("Gateway service install");
+    },
+    uninstall: async () => {
+      throw unsupported("Gateway service uninstall");
+    },
+    stop: async () => {
+      throw unsupported("Gateway service stop");
+    },
+    restart: async () => {
+      throw unsupported("Gateway service restart");
+    },
+    isLoaded: async () => false,
+    readCommand: async () => null,
+    readRuntime: async () => ({
+      status: "unknown",
+      detail,
+      cachedLabel: true,
+    }),
+  };
+}
+
 export type GatewayService = {
   label: string;
   loadedText: string;
@@ -81,6 +129,10 @@ export function resolveGatewayService(): GatewayService {
   }
 
   if (process.platform === "linux") {
+    const managerMode = resolveLinuxServiceManagerModeCached();
+    if (managerMode !== "systemd") {
+      return createExternallyManagedService(managerMode);
+    }
     return {
       label: "systemd",
       loadedText: "enabled",

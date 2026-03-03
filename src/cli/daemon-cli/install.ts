@@ -11,6 +11,10 @@ import {
   writeConfigFile,
 } from "../../config/config.js";
 import { resolveIsNixMode } from "../../config/paths.js";
+import {
+  detectAndPersistLinuxGatewayServiceManagerMode,
+  renderGatewayServiceManagerModeHints,
+} from "../../daemon/service-manager-mode.js";
 import { resolveGatewayService } from "../../daemon/service.js";
 import { resolveGatewayAuth } from "../../gateway/auth.js";
 import { defaultRuntime } from "../../runtime.js";
@@ -47,6 +51,17 @@ export async function runDaemonInstall(opts: DaemonInstallOptions) {
   if (!isGatewayDaemonRuntime(runtimeRaw)) {
     fail('Invalid --runtime (use "node" or "bun")');
     return;
+  }
+
+  if (process.platform === "linux") {
+    const managerMode = await detectAndPersistLinuxGatewayServiceManagerMode(cfg);
+    if (managerMode !== "systemd") {
+      fail(
+        `Gateway service install is unavailable when gateway.serviceManagerMode=${managerMode}.`,
+        renderGatewayServiceManagerModeHints(managerMode, process.env),
+      );
+      return;
+    }
   }
 
   const service = resolveGatewayService();

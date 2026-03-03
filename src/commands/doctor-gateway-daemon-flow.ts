@@ -12,9 +12,13 @@ import {
   launchAgentPlistExists,
   repairLaunchAgentBootstrap,
 } from "../daemon/launchd.js";
+import {
+  detectLinuxGatewayServiceManagerMode,
+  renderGatewayServiceManagerModeHints,
+  resolveConfiguredGatewayServiceManagerMode,
+} from "../daemon/service-manager-mode.js";
 import { resolveGatewayService } from "../daemon/service.js";
 import { renderSystemdUnavailableHints } from "../daemon/systemd-hints.js";
-import { isSystemdUserServiceAvailable } from "../daemon/systemd.js";
 import { formatPortDiagnostics, inspectPortUsage } from "../infra/ports.js";
 import { isWSL } from "../infra/wsl.js";
 import type { RuntimeEnv } from "../runtime.js";
@@ -97,6 +101,25 @@ export async function maybeRepairGatewayDaemon(params: {
     return;
   }
 
+  const configuredLinuxServiceManagerMode =
+    process.platform === "linux" ? resolveConfiguredGatewayServiceManagerMode(params.cfg) : null;
+  const detectedLinuxServiceManagerMode =
+    process.platform === "linux" ? await detectLinuxGatewayServiceManagerMode() : null;
+  if (
+    configuredLinuxServiceManagerMode &&
+    detectedLinuxServiceManagerMode &&
+    configuredLinuxServiceManagerMode !== detectedLinuxServiceManagerMode
+  ) {
+    note(
+      [
+        `Configured gateway.serviceManagerMode=${configuredLinuxServiceManagerMode}.`,
+        `Runtime probe detected ${detectedLinuxServiceManagerMode}.`,
+        `Update with: ${formatCliCommand(`openclaw config set gateway.serviceManagerMode ${detectedLinuxServiceManagerMode}`)}`,
+      ].join("\n"),
+      "Gateway service mode",
+    );
+  }
+
   const service = resolveGatewayService();
   // systemd can throw in containers/WSL; treat as "not loaded" and fall back to hints.
   let loaded = false;
@@ -149,7 +172,14 @@ export async function maybeRepairGatewayDaemon(params: {
 
   if (!loaded) {
     if (process.platform === "linux") {
-      const systemdAvailable = await isSystemdUserServiceAvailable().catch(() => false);
+      if (configuredLinuxServiceManagerMode && configuredLinuxServiceManagerMode !== "systemd") {
+        note(
+          renderGatewayServiceManagerModeHints(configuredLinuxServiceManagerMode).join("\n"),
+          "Gateway",
+        );
+        return;
+      }
+      const systemdAvailable = (detectedLinuxServiceManagerMode ?? "systemd") === "systemd";
       if (!systemdAvailable) {
         const wsl = await isWSL();
         note(renderSystemdUnavailableHints({ wsl }).join("\n"), "Gateway");

@@ -315,6 +315,8 @@ export type GatewayToolsConfig = {
   allow?: string[];
 };
 
+export type GatewayServiceManagerMode = "systemd" | "supervisor" | "none";
+
 export type GatewayConfig = {
   /** Single multiplexed port for Gateway WS + HTTP (default: 18789). */
   port?: number;
@@ -323,6 +325,11 @@ export type GatewayConfig = {
    * When set to "local", the CLI may start the gateway locally.
    */
   mode?: "local" | "remote";
+  /**
+   * Persisted service-manager capability detected during onboarding/install.
+   * Linux defaults to systemd unless container/supervisor mode is detected.
+   */
+  serviceManagerMode?: GatewayServiceManagerMode;
   /**
    * Bind address policy for the Gateway WebSocket + Control UI HTTP server.
    * - auto: Loopback (127.0.0.1) if available, else 0.0.0.0 (fallback to all interfaces)

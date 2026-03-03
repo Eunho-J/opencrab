@@ -522,6 +522,9 @@ export const OpenClawSchema = z
       .object({
         port: z.number().int().positive().optional(),
         mode: z.union([z.literal("local"), z.literal("remote")]).optional(),
+        serviceManagerMode: z
+          .union([z.literal("systemd"), z.literal("supervisor"), z.literal("none")])
+          .optional(),
         bind: z
           .union([
             z.literal("auto"),
