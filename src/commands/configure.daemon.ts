@@ -1,5 +1,9 @@
 import { withProgress } from "../cli/progress.js";
 import { loadConfig } from "../config/config.js";
+import {
+  detectAndPersistLinuxGatewayServiceManagerMode,
+  renderGatewayServiceManagerModeHints,
+} from "../daemon/service-manager-mode.js";
 import { resolveGatewayService } from "../daemon/service.js";
 import type { RuntimeEnv } from "../runtime.js";
 import { note } from "../terminal/note.js";
@@ -19,6 +23,14 @@ export async function maybeInstallDaemon(params: {
   gatewayToken?: string;
   daemonRuntime?: GatewayDaemonRuntime;
 }) {
+  if (process.platform === "linux") {
+    const managerMode = await detectAndPersistLinuxGatewayServiceManagerMode();
+    if (managerMode !== "systemd") {
+      note(renderGatewayServiceManagerModeHints(managerMode).join("\n"), "Gateway service");
+      return;
+    }
+  }
+
   const service = resolveGatewayService();
   const loaded = await service.isLoaded({ env: process.env });
   let shouldCheckLinger = false;

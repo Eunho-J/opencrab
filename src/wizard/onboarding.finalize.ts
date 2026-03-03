@@ -22,8 +22,11 @@ import {
 } from "../commands/onboard-helpers.js";
 import type { OnboardOptions } from "../commands/onboard-types.js";
 import type { OpenClawConfig } from "../config/config.js";
+import {
+  detectAndPersistLinuxGatewayServiceManagerMode,
+  renderGatewayServiceManagerModeHints,
+} from "../daemon/service-manager-mode.js";
 import { resolveGatewayService } from "../daemon/service.js";
-import { isSystemdUserServiceAvailable } from "../daemon/systemd.js";
 import { ensureControlUiAssetsBuilt } from "../infra/control-ui-assets.js";
 import type { RuntimeEnv } from "../runtime.js";
 import { restoreTerminalState } from "../terminal/restore.js";
@@ -62,12 +65,19 @@ export async function finalizeOnboardingWizard(
     }
   };
 
+  const linuxServiceManagerMode =
+    process.platform === "linux"
+      ? await detectAndPersistLinuxGatewayServiceManagerMode(nextConfig)
+      : "none";
   const systemdAvailable =
-    process.platform === "linux" ? await isSystemdUserServiceAvailable() : true;
+    process.platform === "linux" ? linuxServiceManagerMode === "systemd" : true;
   if (process.platform === "linux" && !systemdAvailable) {
     await prompter.note(
-      "Systemd user services are unavailable. Skipping lingering checks and service install.",
-      "Systemd",
+      [
+        `gateway.serviceManagerMode=${linuxServiceManagerMode}.`,
+        ...renderGatewayServiceManagerModeHints(linuxServiceManagerMode, process.env),
+      ].join("\n"),
+      "Gateway service",
     );
   }
 
@@ -103,7 +113,10 @@ export async function finalizeOnboardingWizard(
 
   if (process.platform === "linux" && !systemdAvailable && installDaemon) {
     await prompter.note(
-      "Systemd user services are unavailable; skipping service install. Use your container supervisor or `docker compose up -d`.",
+      [
+        "Systemd user services are unavailable; skipping service install.",
+        ...renderGatewayServiceManagerModeHints(linuxServiceManagerMode, process.env),
+      ].join("\n"),
       "Gateway service",
     );
     installDaemon = false;

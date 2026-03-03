@@ -1,6 +1,9 @@
 import type { OpenClawConfig } from "../../../config/config.js";
+import {
+  detectAndPersistLinuxGatewayServiceManagerMode,
+  renderGatewayServiceManagerModeHints,
+} from "../../../daemon/service-manager-mode.js";
 import { resolveGatewayService } from "../../../daemon/service.js";
-import { isSystemdUserServiceAvailable } from "../../../daemon/systemd.js";
 import type { RuntimeEnv } from "../../../runtime.js";
 import { buildGatewayInstallPlan, gatewayInstallErrorHint } from "../../daemon-install-helpers.js";
 import { DEFAULT_GATEWAY_DAEMON_RUNTIME, isGatewayDaemonRuntime } from "../../daemon-runtime.js";
@@ -20,17 +23,23 @@ export async function installGatewayDaemonNonInteractive(params: {
   }
 
   const daemonRuntimeRaw = opts.daemonRuntime ?? DEFAULT_GATEWAY_DAEMON_RUNTIME;
-  const systemdAvailable =
-    process.platform === "linux" ? await isSystemdUserServiceAvailable() : true;
-  if (process.platform === "linux" && !systemdAvailable) {
-    runtime.log("Systemd user services are unavailable; skipping service install.");
-    return;
-  }
-
   if (!isGatewayDaemonRuntime(daemonRuntimeRaw)) {
     runtime.error("Invalid --daemon-runtime (use node or bun)");
     runtime.exit(1);
     return;
+  }
+
+  if (process.platform === "linux") {
+    const managerMode = await detectAndPersistLinuxGatewayServiceManagerMode(params.nextConfig);
+    if (managerMode !== "systemd") {
+      runtime.log(
+        [
+          `gateway.serviceManagerMode=${managerMode}; skipping service install.`,
+          ...renderGatewayServiceManagerModeHints(managerMode, process.env),
+        ].join("\n"),
+      );
+      return;
+    }
   }
 
   const service = resolveGatewayService();

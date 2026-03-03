@@ -1,3 +1,4 @@
+import { loadConfig } from "../../config/config.js";
 import {
   resolveGatewayLaunchAgentLabel,
   resolveGatewaySystemdServiceName,
@@ -5,6 +6,10 @@ import {
 } from "../../daemon/constants.js";
 import { resolveGatewayLogPaths } from "../../daemon/launchd.js";
 import { formatRuntimeStatus } from "../../daemon/runtime-format.js";
+import {
+  renderGatewayServiceManagerModeHints,
+  resolveLinuxGatewayServiceManagerMode,
+} from "../../daemon/service-manager-mode.js";
 import { getResolvedLoggerSettings } from "../../logging.js";
 import { colorize, isRich, theme } from "../../terminal/theme.js";
 import { formatCliCommand } from "../command-format.js";
@@ -171,6 +176,15 @@ export function renderGatewayServiceStartHints(env: NodeJS.ProcessEnv = process.
       return [...base, `launchctl bootstrap gui/$UID ~/Library/LaunchAgents/${label}.plist`];
     }
     case "linux": {
+      let mode = resolveLinuxGatewayServiceManagerMode(undefined, env);
+      try {
+        mode = resolveLinuxGatewayServiceManagerMode(loadConfig(), env);
+      } catch {
+        // keep fallback mode
+      }
+      if (mode !== "systemd") {
+        return [...base, ...renderGatewayServiceManagerModeHints(mode, env)];
+      }
       const unit = resolveGatewaySystemdServiceName(profile);
       return [...base, `systemctl --user start ${unit}.service`];
     }

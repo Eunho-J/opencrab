@@ -2,11 +2,12 @@ import type { Writable } from "node:stream";
 import { loadConfig } from "../../config/config.js";
 import { resolveIsNixMode } from "../../config/paths.js";
 import { checkTokenDrift } from "../../daemon/service-audit.js";
+import {
+  renderGatewayServiceManagerModeHints,
+  resolveLinuxGatewayServiceManagerMode,
+} from "../../daemon/service-manager-mode.js";
 import type { GatewayService } from "../../daemon/service.js";
-import { renderSystemdUnavailableHints } from "../../daemon/systemd-hints.js";
-import { isSystemdUserServiceAvailable } from "../../daemon/systemd.js";
 import { resolveGatewayCredentialsFromConfig } from "../../gateway/credentials.js";
-import { isWSL } from "../../infra/wsl.js";
 import { defaultRuntime } from "../../runtime.js";
 import {
   buildDaemonServiceSnapshot,
@@ -31,11 +32,16 @@ async function maybeAugmentSystemdHints(hints: string[]): Promise<string[]> {
   if (process.platform !== "linux") {
     return hints;
   }
-  const systemdAvailable = await isSystemdUserServiceAvailable().catch(() => false);
-  if (systemdAvailable) {
+  let mode = resolveLinuxGatewayServiceManagerMode(undefined, process.env);
+  try {
+    mode = resolveLinuxGatewayServiceManagerMode(loadConfig(), process.env);
+  } catch {
+    // keep fallback mode
+  }
+  if (mode === "systemd") {
     return hints;
   }
-  return [...hints, ...renderSystemdUnavailableHints({ wsl: await isWSL() })];
+  return [...hints, ...renderGatewayServiceManagerModeHints(mode, process.env)];
 }
 
 function createActionIO(params: { action: DaemonAction; json: boolean }) {
